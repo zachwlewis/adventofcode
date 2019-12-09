@@ -4,85 +4,85 @@
 
 import common
 
+class Image:
+  def __init__(self, width: int, height:int):
+    self.width = width
+    self.height = height
+    self.layers = []
+
+  def layerLength(self) -> int:
+    """The length of each layer in the image."""
+    return self.width * self.height
+
+  def layerCount(self) -> int:
+    """The number of layers contained in the image."""
+    return len(self.layers)
+
+  def loadFile(self, path: str) -> bool:
+    """Loads an image from a file path.
+
+    Returns the success of the load operation."""
+    if self.width == 0 or self.height == 0: return False
+    stream = open(path, 'r')
+    p_val = stream.read(1)
+    p_idx = 0
+    layer = []
+
+    # Clear the existing image
+    self.layers = []
+
+    while p_val != '\n':
+      layer.append(int(p_val))
+      p_val = stream.read(1)
+      p_idx += 1
+      if p_idx == self.layerLength():
+        self.layers.append(layer)
+        layer = []
+        p_idx = 0
+
+    return True
+
+  def checksum(self) -> int:
+    """Calculates the image checksum."""
+    minZeros = -1
+    ck = -1
+    for layer in self.layers:
+      if minZeros == -1 or minZeros > layer.count(0):
+        minZeros = layer.count(0)
+        ck = layer.count(1) * layer.count(2)
+
+    return ck
+
+  def render(self) -> str:
+    """Renders the image to a string."""
+    processed = ['█'] * self.layerLength()
+    buffer = ""
+
+    for layer in reversed(self.layers):
+      idx = 0
+      for pixel in layer:
+        if pixel == 0:
+          processed[idx] = ' '
+        elif pixel == 1:
+          processed[idx] = '█'
+
+        idx += 1
+
+    idx = 0
+    while len(processed):
+      buffer += processed.pop(0)
+      idx += 1
+      if idx == self.width:
+        buffer += '\n'
+        idx = 0
+
+    return buffer
+
+IMG_PATH = common.getFilePath('input8.txt')
 IMG_WIDTH = 25
 IMG_HEIGHT = 6
-LAYER_SIZE = IMG_WIDTH * IMG_HEIGHT
 
-f = open(common.getFilePath('input8.txt'), 'r')
-img = []
-i = f.read(1)
-while i != '\n':
-  img.append(int(i))
-  i = f.read(1)
-
-def parseImage(input, width, height):
-  layer_length = width * height
-  image = []
-  layer = []
-  count = 0
-
-  for pixel in input:
-    layer.append(pixel)
-    count += 1
-
-    if count == LAYER_SIZE:
-      image.append(layer)
-      layer = []
-      count = 0
-
-  return image
-
-
-def checksum(image):
-  layers = []
-  counts = []
-  layer = []
-  count = 0
-  number_count = dict()
-
-  for pixel in image:
-    layer.append(pixel)
-    number_count.setdefault(pixel, 0)
-    number_count[pixel] += 1
-    count += 1
-    if count == LAYER_SIZE:
-      layers.append(layer)
-      counts.append(number_count)
-      layer = []
-      number_count = dict()
-      count = 0
-
-  zeros = 1000000
-  value = 0
-  for values in counts:
-    if values[0] < zeros:
-      zeros = values[0]
-      value = values[1] * values[2]
-
-  return value
-
-def processImage(image, width, height):
-  im = list(image)
-  im.reverse()
-  processed = im[0]
-  
-  for layer in im:
-    pid = 0
-    for pixel in layer:
-      if pixel == 0: processed[pid] = ' '
-      elif pixel == 1: processed[pid] = '█' #░█
-      pid += 1
-
-  s = ""
-  col = 0
-  while len(processed):
-    s += processed.pop(0)
-    col += 1
-    if col == width:
-      col = 0
-      s += '\n'
-
-  return s
-
-print(checksum(img))
-print(processImage(parseImage(img, IMG_WIDTH, IMG_HEIGHT), IMG_WIDTH, IMG_HEIGHT))
+i = Image(IMG_WIDTH, IMG_HEIGHT)
+i.loadFile(IMG_PATH)
+print(i.checksum())
+print(i.render())
