@@ -56,6 +56,17 @@ class Thread:
     self.verbose = False
     Thread.MAX_ID += 1
 
+  def clone(self):
+    c = Thread(self.program.copy())
+    c.addr = self.addr
+    c.istream = self.istream
+    c.ostream = self.ostream
+    c.status = self.status
+    c.relativeBase = self.relativeBase
+    c.interactive = self.interactive
+    c.verbose = self.verbose
+    return c
+
   def process(self):
     self.status = executeThread(self)
     self.addr = self.status.addr
@@ -63,6 +74,11 @@ class Thread:
   def needInput(self) -> bool: return self.status.err == ERR_INPUT
   def didSucceed(self) -> bool: return self.status.err == ERR_SUCCESS
   def noError(self) -> bool: return self.status.err == ERR_NONE
+
+  def hasOutput(self) -> bool: return len(self.ostream)
+  def readOutput(self) -> int:
+    """ Reads and removes the next output from the buffer."""
+    return self.ostream.pop(0)
 
 def getValueAtAddress(program: Program, addr: int, mode: int, relativeBase: int) -> int:
   if mode == PM_ADR: return program.get(addr, 0)
