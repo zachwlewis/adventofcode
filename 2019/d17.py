@@ -45,7 +45,7 @@ def part1() -> Tuple[Set[IntPoint], IntPoint]:
 
   alignment_sum = 0
 
-  print(''.join(map(str,output)))
+  #print(''.join(map(str,output)))
   
   for s in scaffolds:
     checks = {s + DIRECTIONS['n'],
@@ -61,38 +61,26 @@ def part1() -> Tuple[Set[IntPoint], IntPoint]:
   return scaffolds, position
 
 def part2():
-  ip = icp.Thread(icp.loadProgram(PROGRAM_PATH))
-  output: List[str] = []
-  x, y = 0, 0
-  scaffolds: Set[IntPoint] = set()
-  while not ip.didSucceed():
-    ip.process()
-    if ip.hasOutput():
-      value = chr(ip.readOutput())
-      
-      if value == '#':
-        # A scaffold exists at this location.
-        scaffolds.add(IntPoint(x,y))
-      
-      if value == '\n':
-        x = 0
-        y += 1
-      else: x += 1
+  """
+  Via inspection, it is seen that the sequences that work match:
 
-      output.append(value)
+  A,B,A,C,A,B,C,B,C,B
+  A=L,10,R,8,L,6,R,6
+  B=L,8,L,8,R,8
+  C=R,8,L,6,L,10,L,10
+  """
 
-  alignment_sum = 0
+  # Trust me.
+  s = ['A',',','B',',','A',',','C',',','A',',','B',',','C',',','B',',','C',',','B','\n','L',',','1','0',',','R',',','8',',','L',',','6',',','R',',','6','\n','L',',','8',',','L',',','8',',','R',',','8','\n','R',',','8',',','L',',','6',',','L',',','1','0',',','L',',','1','0','\n','n','\n']
   
-  for s in scaffolds:
-    checks = {s + DIRECTIONS[0],
-              s + DIRECTIONS[1],
-              s + DIRECTIONS[2],
-              s + DIRECTIONS[3]}
+  ip = icp.Thread(icp.loadProgram(PROGRAM_PATH))
+  ip.program[0] = 2
+  for c in s:
+    ip.istream.append(ord(c))
 
-    if len(scaffolds.intersection(checks)) == 4:
-      alignment_sum += s.x * s.y
+  while not ip.didSucceed(): ip.process()
 
-  print(alignment_sum)
+  print(ip.ostream.pop())
 
 def find_path(m: Set[IntPoint], p: IntPoint) -> str:
   current_position = p
@@ -130,4 +118,4 @@ def can_move(m: Set[IntPoint], p: IntPoint, d: str) -> Tuple[str, str]:
 
 scaffold_map, starting_position = part1()
 
-print(find_path(scaffold_map, starting_position))
+part2()
