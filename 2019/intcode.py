@@ -57,6 +57,7 @@ class Thread:
     Thread.MAX_ID += 1
 
   def clone(self):
+    """Creates a copy of the thread, including state."""
     c = Thread(self.program.copy())
     c.addr = self.addr
     c.istream = self.istream
@@ -68,6 +69,7 @@ class Thread:
     return c
 
   def process(self):
+    """Execute the next instruction."""
     self.status = executeThread(self)
     self.addr = self.status.addr
 
@@ -79,6 +81,23 @@ class Thread:
   def readOutput(self) -> int:
     """ Reads and removes the next output from the buffer."""
     return self.ostream.pop(0)
+
+  def readOutputAscii(self) -> str:
+    """Reads output until a non-ASCII value is encountered."""
+    output = ''
+    while len(self.ostream) and self.ostream[0] < 127:
+      output += chr(self.ostream.pop(0))
+
+    return output
+
+  def addInput(self, value: int) -> None:
+    """Adds input to the input buffer."""
+    self.istream.append(value)
+  def addInputAscii(self, value: str) -> None:
+    """Adds an ASCII string to the input buffer as integers."""
+    chrList = list(value)
+    for c in chrList:
+      self.istream.append(ord(c))
 
 def getValueAtAddress(program: Program, addr: int, mode: int, relativeBase: int) -> int:
   if mode == PM_ADR: return program.get(addr, 0)

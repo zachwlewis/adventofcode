@@ -69,18 +69,15 @@ def part2():
   B=L,8,L,8,R,8
   C=R,8,L,6,L,10,L,10
   """
-
-  # Trust me.
-  s = ['A',',','B',',','A',',','C',',','A',',','B',',','C',',','B',',','C',',','B','\n','L',',','1','0',',','R',',','8',',','L',',','6',',','R',',','6','\n','L',',','8',',','L',',','8',',','R',',','8','\n','R',',','8',',','L',',','6',',','L',',','1','0',',','L',',','1','0','\n','n','\n']
   
   ip = icp.Thread(icp.loadProgram(PROGRAM_PATH))
   ip.program[0] = 2
-  for c in s:
-    ip.istream.append(ord(c))
+  ip.addInputAscii('A,B,A,C,A,B,C,B,C,B\nL,10,R,8,L,6,R,6\nL,8,L,8,R,8\nR,8,L,6,L,10,L,10\nn\n')
 
   while not ip.didSucceed(): ip.process()
-
-  print(ip.ostream.pop())
+  # Clear the output buffer of the map.
+  ip.readOutputAscii()
+  print(ip.readOutput())
 
 def find_path(m: Set[IntPoint], p: IntPoint) -> str:
   current_position = p
