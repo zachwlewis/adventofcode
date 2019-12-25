@@ -79,8 +79,13 @@ class Thread:
 
   def hasOutput(self) -> bool: return len(self.ostream)
   def readOutput(self) -> int:
-    """ Reads and removes the next output from the buffer."""
-    return self.ostream.pop(0)
+    """ Reads and removes the next output from the buffer.
+    Returns -1 if the output buffer is empty.
+    """
+    if len(self.ostream):
+      return self.ostream.pop(0)
+
+    return -1
 
   def readOutputAscii(self) -> str:
     """Reads output until a non-ASCII value is encountered."""
