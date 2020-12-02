@@ -21,3 +21,16 @@ class IntPoint:
   def __repr__(self) -> str: return 'IntPoint %s' % str(self)
   def __hash__(self): return hash((self.x, self.y))
 
+class GridArrayConverter:
+  def __init__(self, width: int, height: int):
+    self.width = width
+    self.height = height
+
+  def pti(self, point: IntPoint) -> int:
+    """Converts an IntPoint to an array index."""
+    return point.x + point.y * self.width
+
+  def itp(self, index: int) -> IntPoint:
+    """Converts an array index to an IntPoint."""
+    return IntPoint(index % self.width, index // self.height)
+
