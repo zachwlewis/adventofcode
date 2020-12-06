@@ -38,10 +38,10 @@ def findSum3(l: List[int], sum: int):
   return -1, -1, -1
 
 a, b = findSum2(values, 2020)
-print(f'{a} * {b} = {a*b}')
+print(f'Answer 1: {a*b}')
 
 a, b, c = findSum3(values, 2020)
-print(f'{a} * {b} * {c} = {a*b*c}')
+print(f'Answer 2: {a*b*c}')
 
 
 

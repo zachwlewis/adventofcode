@@ -18,7 +18,7 @@ def countTrees(route: List[str], width: int, right: int, down: int) -> int:
   return trees
 
 routeA = countTrees(route, 31, 3, 1)
-print(f'Trees along slope (1,3): {routeA}')
+print(f'Answer 1: {routeA}')
 
 routeB = countTrees(route, 31, 1, 1)
 routeC = countTrees(route, 31, 5, 1)
@@ -26,4 +26,4 @@ routeD = countTrees(route, 31, 7, 1)
 routeE = countTrees(route, 31, 1, 2)
 
 treeProduct = routeA * routeB * routeC * routeD * routeE
-print(f'Trees product along all routes: {treeProduct}')
+print(f'Answer 2: {treeProduct}')

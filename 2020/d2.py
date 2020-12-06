@@ -35,5 +35,5 @@ for p in passwords:
   validPasswordsA += 1 if checkPasswordA(p) else 0
   validPasswordsB += 1 if checkPasswordB(p) else 0
 
-print(f'Valid Passwords A: {validPasswordsA}')
-print(f'Valid Passwords B: {validPasswordsB}')
+print(f'Answer 1: {validPasswordsA}')
+print(f'Answer 2: {validPasswordsB}')
