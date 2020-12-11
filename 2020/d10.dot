@@ -1,0 +1,31 @@
+digraph {
+  0 [color=orange]
+  1 
+  4 
+  5 
+  6 
+  7 
+  10 
+  11 
+  12 
+  15 
+  16 
+  19 
+  22 [color=orange]
+  0 -> 1 [label=1]
+  1 -> 4 [label=1]
+  4 -> 5 [label=1]
+  4 -> 6 [label=1]
+  4 -> 7 [label=1]
+  5 -> 6 [label=1]
+  5 -> 7 [label=1]
+  6 -> 7 [label=2]
+  7 -> 10 [label=4]
+  10 -> 11 [label=4]
+  10 -> 12 [label=4]
+  11 -> 12 [label=4]
+  12 -> 15 [label=8]
+  15 -> 16 [label=8]
+  16 -> 19 [label=8]
+  19 -> 22 [label=8]
+}
