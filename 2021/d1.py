@@ -20,7 +20,7 @@ def get_window_value(data: list[int], end: int) -> int:
     """Gets the window value of 3 items"""
     return data[end] + data[end-1] + data[end-2]
 
-window_increases = 0
+window_increases: int = 0
 for index in range(3, input_size):
     if get_window_value(inputs, index) > get_window_value(inputs, index - 1):
         window_increases += 1
