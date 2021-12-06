@@ -4,31 +4,33 @@ Day 4
 https://adventofcode.com/2021/day/4
 """
 
-import fr
 import re
+import fr
 
 inputs: list[str] = fr.read_as_list('input4')
-board_size = 5
+BOARD_SIZE = 5
 numbers: list[int] = list(map(int, inputs[0].split(',')))
 
 n_map = {}
-for i in range(0, len(numbers)):
-    n_map[numbers[i]] = i
+for index, value in enumerate(numbers):
+    n_map[value] = index
 
-def map_board_to_turn(board: list[int]) -> list[int]:
-    for index in range(0, len(board)):
-        board[index] = n_map[board[index]]
-    return board
+def map_board_to_turn(input_board: list[int]) -> list[int]:
+    """Takes board values and converts it to turns the number is called."""
+    for index, value in enumerate(input_board):
+        input_board[index] = n_map[value]
+    return input_board
 
 def parse_boards(data: list[str]) -> list[list[int]]:
+    """Takes raw input data and converts it to a list of boards."""
     boards = []
     current_board: list[int] = []
-    for row_index in range(0,len(data)):
+    for row_index, value in enumerate(data):
         if row_index > 0 and row_index % 6 == 0:
             boards.append(map_board_to_turn(current_board))
             current_board = []
         elif row_index > 0:
-            split_row = re.split(r'\s\s?', data[row_index])
+            split_row = re.split(r'\s\s?', value)
             row_numbers = list(map(int, split_row))
             current_board.extend(row_numbers)
 
@@ -65,30 +67,36 @@ def get_winning_turn(board: list[int]) -> int:
 
         turn = max(values)
         min_turn = min(turn, min_turn)
-    
+
     return min_turn
 
-winning_turn = 100
-winning_board = []
-losing_turn = 0
-losing_board = []
-for board in boards:
-    turn = get_winning_turn(board)
-    if turn < winning_turn:
-        winning_turn = turn
-        winning_board = board
-    if turn > losing_turn:
-        losing_turn = turn
-        losing_board = board
+def score_all_boards(boards, get_winning_turn):
+    """Scores all the boards and provides the winning and losing boards and turns."""
+    winning_turn: int = 100
+    winning_board = []
+    losing_turn: int = 0
+    losing_board = []
+    for board in boards:
+        turn = get_winning_turn(board)
+        if turn < winning_turn:
+            winning_turn = turn
+            winning_board = board
+        if turn > losing_turn:
+            losing_turn = turn
+            losing_board = board
+    return winning_turn,winning_board,losing_turn,losing_board
+
 
 def get_board_score(board: list[int], turn: int) -> int:
     '''Scores a board by summing all the numbers that were not marked.'''
     score = 0
-    for n in board:
-        if n > turn:
-            score += numbers[n]
+    for turn_called in board:
+        if turn_called > turn:
+            score += numbers[turn_called]
 
     return score
+
+winning_turn, winning_board, losing_turn, losing_board = score_all_boards(boards, get_winning_turn)
 
 print(get_board_score(winning_board, winning_turn) * numbers[winning_turn])
 print(get_board_score(losing_board, losing_turn) * numbers[losing_turn])
