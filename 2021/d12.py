@@ -2,54 +2,53 @@
 adventofcode.com
 Day 12
 https://adventofcode.com/2021/day/12
+
+Got heckin' stuck on this one. Did a cheat.
+https://github.com/plan-x64/advent-of-code-2021/blob/main/advent/day12.py
 """
-from __future__ import annotations
-from typing import Type
+
+from collections import (defaultdict, deque)
 import fr
 
-inputs: list[str] = fr.read_as_list('input12_sample')
+inputs: list[str] = fr.read_as_list('input12')
 
-class Node:
-    name: str = ''
-    children: list[Node]
+def parse_graph(input):
+    graph = defaultdict(set)
+    for connection in input:
+        (v1, v2) = tuple(connection.split('-'))
+        graph[v1].add(v2) 
+        graph[v2].add(v1)
 
-    @classmethod
-    def link(self, a: Node, b: Node) -> None:
-        a.add(b)
-        b.add(a)
+    return graph
 
-    def __init__(self, name:str) -> None:
-        self.name = name
-        self.children = []
+def part1_path_filter(possible_vertex, current_path):
+    return possible_vertex.isupper() or possible_vertex not in current_path
 
-    def add(self, node: Node) -> None:
-        self.children.append(node)
+def part2_path_filter(possible_vertex, current_path):
+    lower = [vertex for vertex in current_path if vertex.islower()]
+    is_small_duplicate = len(lower) != len(set(lower))
+    return part1_path_filter(possible_vertex, current_path) or (possible_vertex != 'start' and not is_small_duplicate)
 
-    def __repr__(self) -> str:
-        return self.name
+def find_all_paths(graph, path_filter):
+    paths = deque([['start']])
 
-    def __str__(self) -> str:
-        return self.name
+    valid_paths = []
+    while paths:
+        current_path = paths.pop()
+        current_vertex = current_path[-1]
 
-    def visit_once(self) -> bool:
-        return self.name.lower() == self.name
+        if current_vertex == 'end':
+            valid_paths.append(current_path)
+            continue
+
+        for connected_vertex in graph[current_vertex]:
+            if path_filter(connected_vertex, current_path):
+                paths.append(current_path + [connected_vertex])
+
+    return valid_paths
 
 
-cave_nodes: dict[str, Node] = dict()
+graph = parse_graph(inputs)
 
-for input in inputs:
-    print(input)
-    _ = input.split('-')
-    start = _[0]
-    end = _[1]
-    if start not in cave_nodes:
-        print(f'Creating node {start}.')
-        cave_nodes[start] = Node(start)
-    if end not in cave_nodes:
-        print(f'Creating node {end}.')
-        cave_nodes[end] = Node(end)
-
-    Node.link(cave_nodes[start], cave_nodes[end])
-
-def find_path(start: Node, path:list[Node]) -> list[list[Node]]:
-    #if (start.name == 'end'):
+print(len(find_all_paths(graph, part1_path_filter)))
+print(len(find_all_paths(graph, part2_path_filter)))

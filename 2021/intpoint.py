@@ -19,6 +19,12 @@ class IntPoint:
     def __sub__(self, other):
         return IntPoint(self.x - other.x, self.y - other.y)
 
+    def __hash__(self) -> int:
+        return hash(str(self))
+
+    def __eq__(self, __o: object) -> bool:
+        return self.x == __o.x and self.y == __o.y
+
     def unit(self):
         x = self.x // abs(self.x) if self.x != 0 else 0
         y = self.y // abs(self.y) if self.y != 0 else 0
