@@ -7,7 +7,7 @@ https://adventofcode.com/2021/day/16
 import fr
 from bits import BITSPacket
 
-inputs: list[str] = fr.read_as_list('input16_sample')
+inputs: list[str] = fr.read_as_list('input16')
 
 
 
@@ -15,9 +15,9 @@ def dump_inputs(inputs):
     
     for idx, data in enumerate(inputs):
         bt = BITSPacket()
-        print(f'Packet {idx + 1} >>>>>>>>>>')
+        #print(f'Packet {idx + 1} >>>>>>>>>>')
         bt.read_data(data)
-        print(version_sum(bt))
+        print(f'Packet {idx + 1}: {bt.pretty()}')
 
 def version_sum(bp: BITSPacket) -> int:
     v_sum: int = bp.header.version
@@ -26,12 +26,9 @@ def version_sum(bp: BITSPacket) -> int:
 
     return v_sum
 
-# pkt: BITSPacket = BITSPacket()
-# pkt.read_data(inputs[0])
-# print(pkt.to_string())
-# print(version_sum(pkt))
+# dump_inputs(inputs)
 
-for data in inputs[7:]:
-    test: BITSPacket = BITSPacket()
-    test.read_data(data)
-    print(test.to_string())
+pkt: BITSPacket = BITSPacket()
+pkt.read_data(inputs[0])
+print(version_sum(pkt))
+print(pkt.evaluate())

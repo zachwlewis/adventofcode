@@ -118,6 +118,27 @@ class BITSPacket:
         packet.parse_literal()
         return packet.literal_value
 
+    @classmethod
+    def eval_greater(cls, packet: BITSPacket) -> int:
+        a = packet.subpackets[0].evaluate()
+        b = packet.subpackets[1].evaluate()
+        packet.literal_value = 1 if a > b else 0
+        return packet.literal_value
+
+    @classmethod
+    def eval_less(cls, packet: BITSPacket) -> int:
+        a = packet.subpackets[0].evaluate()
+        b = packet.subpackets[1].evaluate()
+        packet.literal_value = 1 if a < b else 0
+        return packet.literal_value
+
+    @classmethod
+    def eval_equal(cls, packet: BITSPacket) -> int:
+        a = packet.subpackets[0].evaluate()
+        b = packet.subpackets[1].evaluate()
+        packet.literal_value = 1 if a == b else 0
+        return packet.literal_value
+
 
     TYPE_SUM = 0
     TYPE_PRODUCT = 1
@@ -137,6 +158,17 @@ class BITSPacket:
         TYPE_GREATER: 'GREATER',
         TYPE_LESS: 'LESS',
         TYPE_EQUAL: 'EQUAL',
+    }
+
+    OP_SYMBOL = {
+        TYPE_SUM: ' + ',
+        TYPE_PRODUCT: ' × ',
+        TYPE_MINIMUM: ' v ',
+        TYPE_MAXIMUM: ' ^ ',
+        TYPE_LITERAL: '',
+        TYPE_GREATER: ' > ',
+        TYPE_LESS: ' < ',
+        TYPE_EQUAL: ' = ',
     }
 
     SUBTYPE_LENGTH = '0'
@@ -165,25 +197,40 @@ class BITSPacket:
                 size += p.size()
             return size
 
-    def to_verbose_string(self, pre: str = '') -> str:
+    def to_verbose_string(self, pre: str = '', level: str = 'low') -> str:
         """Verbose string representation of packet."""
         out: str = ''
         out += f'{pre}┏━━━ {BITSPacket.OP_NAME[self.header.type_id]}: {self.literal_value}\n'
-        # out += f'{pre}┃  Hex    : {self.data}\n'
-        # out += f'{pre}┃  Binary : {self.binary}\n'
-        # out += f'{pre}┃  Size   : {self.size()}\n'
-        # out += f'{pre}┣━ Header\n'
-        # out += f'{pre}┃  Version: {self.header.version}\n'
-        # out += f'{pre}┃  Type ID: {self.header.type_id}\n'
-        # out += f'{pre}┃  Raw    : {self.header.raw}\n'
-        # out += f'{pre}┣━ Payload: {" " * self.header.size()}{self.payload}\n'
+        if level == 'high': out += f'{pre}┃  Hex    : {self.data}\n'
+        if level == 'high': out += f'{pre}┃  Binary : {self.binary}\n'
+        if level == 'high': out += f'{pre}┃  Size   : {self.size()}\n'
+        if level == 'high': out += f'{pre}┣━ Header\n'
+        if level == 'high': out += f'{pre}┃  Version: {self.header.version}\n'
+        if level == 'high': out += f'{pre}┃  Type ID: {self.header.type_id}\n'
+        if level == 'high': out += f'{pre}┃  OP ID  : {self.header.operator_mode}\n'
+        if level == 'high': out += f'{pre}┃  OP Val : {self.header.operator_value}\n'
+        if level == 'high': out += f'{pre}┃  Raw    : {self.header.raw}\n'
+        if level == 'high': out += f'{pre}┣━ Payload: {" " * self.header.size()}{self.payload}\n'
         if len(self.subpackets) > 0:
-            out += f'{pre}┣━ Subpackets\n'
+            out += f'{pre}┣━ Subpackets ({len(self.subpackets)})\n'
             for sp in self.subpackets:
-                out += sp.to_verbose_string(f'{pre}┃  ')
+                out += sp.to_verbose_string(f'{pre}┃  ', level)
         out += f'{pre}┗━━━━━━━━━━━━\n'
 
         return out
+
+    def pretty(self, first:bool=True) -> str:
+        out = ''
+        if self.header.type_id == BITSPacket.TYPE_LITERAL: out = f'{self.literal_value}'
+        else:
+            children = []
+            for sp in self.subpackets:
+                children.append(sp.pretty(False))
+            
+            joiner = BITSPacket.OP_SYMBOL[self.header.type_id]
+            out =  f'({joiner.join(children)})'
+        
+        return out if not first else f'{out} => {self.literal_value}'
 
     def to_string(self, mode: str = 'verbose', pre: str = '') -> str:
         """
@@ -195,7 +242,6 @@ class BITSPacket:
             return f'{pre}{self.binary}'
         else:
             return self.data
-
 
     def parse_hex(self, data: str = '') -> None:
         """
@@ -217,30 +263,33 @@ class BITSPacket:
         self.data = f'{int(valid_data, 2):x}'.upper()
         self.binary = valid_data
 
-    def parse_subpackets(self) -> None:
+    def parse_subpackets(self, data: str = '') -> str:
         """Parses subpackets from the payload."""
         if self.header.operator_mode == BITSPacket.SUBTYPE_LENGTH:
             # Process the given number of bits
-            bin_data = self.payload[:self.header.operator_value]
+            bin_data = data[:self.header.operator_value]
         else:
             # Process the rest of the payload
-            bin_data = self.payload
+            bin_data = data
         
         # print(f'Subpacket Header: {self.header.raw}')
         # print(f'Subpacket {self.header.operator_mode}: {self.header.operator_value}')
         # print(f'Payload: {self.payload}')
         
 
+        
+        subpacket_count:int = 0
         bp = BITSPacket()
-        subpacket_count:int = 1
-        while len(bin_data) > 0 and bp.read_data(bin_data,'bin'):
+        while len(bin_data) > 0 and bp.read_data(bin_data, 'bin') and (self.header.operator_mode == BITSPacket.SUBTYPE_LENGTH or subpacket_count < self.header.operator_value):
             # print(f'Subpacket {subpacket_count} > [{bin_data}] ({len(bin_data)})')
-            subpacket_count += 1
             bin_data = bin_data[bp.size():]
-            # print(f'...processed packet length {bp.size()}')
             if bp.is_valid():
                 self.subpackets.append(bp)
-                bp = BITSPacket()
+                if self.header.operator_mode == BITSPacket.SUBTYPE_COUNT:
+                    subpacket_count += 1
+            bp = BITSPacket()
+
+        return bin_data
 
 
     def read_data(self, data:str = '', mode: str = 'hex') -> bool:
@@ -267,7 +316,7 @@ class BITSPacket:
 
         elif self.header.type_id != BITSPacket.TYPE_LITERAL:
             # Read the rest of the packets as a new packet
-            self.parse_subpackets()
+            self.parse_subpackets(self.payload)
 
         self.evaluate()
         
@@ -305,6 +354,9 @@ class BITSPacket:
             if self.header.type_id == BITSPacket.TYPE_MINIMUM: BITSPacket.eval_minimum(self)
             if self.header.type_id == BITSPacket.TYPE_MAXIMUM: BITSPacket.eval_maximum(self)
             if self.header.type_id == BITSPacket.TYPE_LITERAL: BITSPacket.eval_literal(self)
+            if self.header.type_id == BITSPacket.TYPE_GREATER: BITSPacket.eval_greater(self)
+            if self.header.type_id == BITSPacket.TYPE_LESS: BITSPacket.eval_less(self)
+            if self.header.type_id == BITSPacket.TYPE_EQUAL: BITSPacket.eval_equal(self)
             
             self.evaluated = True
 
