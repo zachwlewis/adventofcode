@@ -3,8 +3,14 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# Mac crap
+.DS_Store
+
 # C extensions
 *.so
+
+# C++ build
+2022/out/
 
 # Distribution / packaging
 .Python
