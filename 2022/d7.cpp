@@ -12,62 +12,83 @@
 #include <sstream>
 #include <map>
 
-#define INPUT_FILE "inputs/d7_sample.txt"
+#define INPUT_FILE "inputs/d7.txt"
 
-class File
+struct File
 {
-public:
-	File() : mName(""), mMode('d'), mSize(0) {}
-	File(std::string inName, char inMode, size_t inSize)
-		: mName(inName), mMode(inMode), mSize(inSize) {}
-	const static char DIR_FLAG = 'd';
-	const static char FILE_FLAG = '-';
-	static File mkdir(std::string inName) { return File(inName, File::DIR_FLAG, 0); }
-	static File touch(std::string inName, size_t inSize) { return File(inName, File::FILE_FLAG, inSize); }
+	std::string name = "unnamed";
+	size_t size = 0;
+	std::vector<File> contents = {};
 
-	std::vector<File*> children;
-	std::string_view name() const { return mName; }
-	size_t size() const
+	size_t get_size() const
 	{
-		if (is_file())
-			return mSize;
+		// return size of file
+		if (size != 0) return size;
 
-		size_t dir_size = 0;
-		for (auto file : children)
+		// return size of contents
+		size_t calculated_size = 0;
+		for (auto file : contents)
 		{
-			dir_size += file->size();
+			calculated_size += file.get_size();
 		}
-		return dir_size;
+		return calculated_size;
 	}
-	bool is_dir() const { return mMode == File::DIR_FLAG; }
-	bool is_file() const { return mMode == File::FILE_FLAG; }
-private:
-	std::string mName = "";
-	size_t mSize = 0;
-	char mMode = '-';
-
 };
 
-void pwd(const std::vector<File*>& inPath)
+void print_tree(const File& inFile, size_t depth = 0)
 {
-	for (auto file : inPath)
+	for (auto file : inFile.contents)
 	{
-		std::cout << "\033[34;7m" << file->name() << "\033[0m";
-		std::cout << "/";
-	}
+		for (size_t i = 0; i < depth; ++i)
+		{
+			std::cout << "  ";
+		}
 
-	std::cout << std::endl;
+		if (file.contents.size() > 0)
+		{
+			std::cout << "- " << file.name << " D (" << file.get_size() << ")" << std::endl;
+			print_tree(file, depth + 1);
+		}
+		else std::cout << "- " << file.name << " F (" << file.get_size() << ")" << std::endl;
+	}
 }
 
-void print_disk(const std::vector<File>& inDisk)
+void size_sum(const File& inFile, size_t& sum)
 {
-	for (auto iter = inDisk.begin(); iter < inDisk.end(); ++iter)
+	//std::cout << inFile.name << " (" << sum << ")" << std::endl;
+	for (auto file : inFile.contents)
 	{
-		std::cout << (*iter).name() << " ";
-		if ((*iter).is_dir())
-			std::cout << "dir" << std::endl;
-		else
-			std::cout << (*iter).size() << std::endl;
+		if (file.contents.size() > 0)
+		{
+			// it's a directory: consider it.
+			size_t size = file.get_size();
+			if (size <= 100000)
+			{
+				sum += size;
+				//std::cout << file.name << " (" << size << ") => " << sum << std::endl;
+			}
+				
+			size_sum(file, sum);
+		}
+	}
+}
+
+void smallest_candidate(const File& inFile, size_t inSizeTarget, size_t &outSize)
+{
+	for (auto file : inFile.contents)
+	{
+		if (file.contents.size() > 0)
+		{
+			// it's a directory: consider it.
+			size_t size = file.get_size();
+			if (size >= inSizeTarget && size < outSize)
+			{
+				outSize = size;
+				//std::cout << file.name << " (" << size << ")" << std::endl;
+			}
+				
+			smallest_candidate(file, inSizeTarget, outSize);
+		}
 	}
 }
 
@@ -81,18 +102,25 @@ int main() {
 		return 1;
 	}
 
-	int score1 = 0;
-	int score2 = 0;
+	const size_t TOTAL_SPACE = 70000000;
+	const size_t REQUIRED_SPACE = 30000000;
 
-	std::vector<File> disk = {};
-	std::vector<File*> path = {};
+	size_t line = 0;
+	size_t score1 = 0;
+	size_t score2 = TOTAL_SPACE;
+
+	File disk = {"disk"};
+	std::vector<File*> path = {&disk};
+	File* current_directory = &disk;
 
 	std::string input = "";
 
 	while (input_file.good())
 	{
+		++line;
 		std::vector<std::string> tokens;
 		std::getline(input_file, input);
+		//std::cout << line << ": " << input << std::endl;
 		if (input.length() == 0)
 			break;
 
@@ -103,31 +131,65 @@ int main() {
 			tokens.push_back(buf);
 		}
 		
-		if (tokens[0] == "$")
+		if (tokens[0] == "$" && tokens[1] == "ls")
 		{
-			// new command for working directory
-			std::cout << "command: " << tokens[1] << std::endl;
+			// ls
+			//std::cout << "$ ls" << std::endl;
+			continue;
+		}
+
+		if (tokens[0] == "$" && tokens[1] == "cd")
+		{
+			// cd
+			if (tokens[2] == "..")
+			{
+				// navigate back
+				//std::cout << "$ cd .." << std::endl;
+				path.pop_back();
+				current_directory = path.back();
+				continue;
+			}
+
+			// switch working directory
+			//std::cout << "$ cd " << tokens[2] << std::endl;
+			current_directory->contents.push_back({tokens[2]});
+			path.push_back(&current_directory->contents.back());
+			current_directory = path.back();
 			continue;
 		}
 		
 		if (tokens[0] == "dir")
 		{
 			// add a directory
-			std::cout << "new directory: " << tokens[1] << std::endl;
+			//std::cout << "dir: " << tokens[1] << std::endl;
 			continue;
 		}
 
 		if (size_t file_size = std::stoi(tokens[0]))
 		{
 			// add a file
-			std::cout << "new file: " << tokens[1] << " (" << file_size << ")" << std::endl;
+			//std::cout << "file: " << tokens[1] << " (" << file_size << ")" << std::endl;
+			current_directory->contents.push_back({tokens[1], file_size});
 			continue;
 		}
 
-		std::cout << "bad input" << std::endl;
+		//std::cout << "bad input" << std::endl;
 	}
 
+	// the disk has been populated.
+
+	//print_tree(disk);
+	//std::cout << "calc sum..." << std::endl;
+
+	size_sum(disk, score1);
 	std::cout << "Part 1: " << score1 << std::endl;
+
+
+	size_t free_space = TOTAL_SPACE - disk.get_size();
+	size_t size_target = REQUIRED_SPACE - free_space;
+	//std::cout << "Free space: " << free_space << std::endl;
+	//std::cout << "Size target: " << size_target << std::endl;
+	smallest_candidate(disk, size_target, score2);
 	std::cout << "Part 2: " << score2 << std::endl;
 
 	return 0;
