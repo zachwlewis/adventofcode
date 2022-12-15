@@ -7,6 +7,7 @@ struct Position
 {
   Position() : x(0), y(0) {}
   Position(int inX, int inY) : x(inX), y(inY) {}
+  Position(int inValue) : x(inValue), y(inValue) {}
   int x = 0;
   int y = 0;
   Position& operator+=(const Position& rhs)
@@ -52,6 +53,8 @@ struct Position
     ss << "{" << x << ", " << y << "}";
     return ss.str();
   }
+
+  int manhattan(const Position& other) const { return std::abs(x - other.x) + std::abs(y - other.y); }
 };
 
 inline std::ostream & operator<<(std::ostream & Str, Position const & v) { 
