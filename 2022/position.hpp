@@ -37,6 +37,7 @@ struct Position
   friend bool operator>=(const Position& lhs, const Position& rhs) { return !(lhs < rhs); }
   friend bool operator==(const Position& lhs, const Position& rhs) { return lhs.x == rhs.x && lhs.y == rhs.y; }
   friend bool operator!=(const Position& lhs, const Position& rhs) { return !(lhs == rhs); }
+  
   Position normalize() const
   {
     Position out;
@@ -52,3 +53,8 @@ struct Position
     return ss.str();
   }
 };
+
+inline std::ostream & operator<<(std::ostream & Str, Position const & v) { 
+  Str << v.tostring();
+  return Str;
+}
