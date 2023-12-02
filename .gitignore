@@ -11,6 +11,7 @@ __pycache__/
 
 # C++ build
 2022/out/
+2023/out/
 
 # Distribution / packaging
 .Python
