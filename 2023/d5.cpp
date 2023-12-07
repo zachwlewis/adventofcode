@@ -11,27 +11,18 @@
 #include <algorithm>
 #include <format>
 #include "stringtools.hpp"
+#include "range.hpp"
 
 #define INPUT_FILE "inputs/d5_sample.txt"
 
 struct SeedTransform {
-	uint_fast64_t source_start;
-	uint_fast64_t destination_start;
-	uint_fast64_t length;
+	uint64_t source_start;
+	uint64_t destination_start;
+	uint64_t length;
 };
 
 inline std::ostream & operator<<(std::ostream & Str, SeedTransform const & v) { 
 	Str << "[" << v.source_start << ".." << v.source_start + v.length-1 << "] => [" << v.destination_start << ".." << v.destination_start + v.length << "]";
-	return Str;
-}
-
-struct SeedRange {
-	uint_fast64_t start;
-	uint_fast64_t length;
-};
-
-inline std::ostream & operator<<(std::ostream & Str, SeedRange const & v) { 
-	Str << "[" << v.start << ".." << v.start + v.length << "] " << v.length;
 	return Str;
 }
 
@@ -41,7 +32,7 @@ inline std::ostream & operator<<(std::ostream & Str, SeedRange const & v) {
  * @param transform The transform to apply.
  * @return True if the seed id was transformed, false otherwise.
 */
-bool transformSeed(uint_fast64_t &seedId, const SeedTransform& transform) {
+bool transformSeed(uint64_t &seedId, const SeedTransform& transform) {
 	if (seedId >= transform.source_start && seedId < transform.source_start + transform.length) {
 		seedId = transform.destination_start + (seedId - transform.source_start);
 		return true;
@@ -50,27 +41,39 @@ bool transformSeed(uint_fast64_t &seedId, const SeedTransform& transform) {
 }
 
 /**
+ * Transforms a range into a list of ranges.
+ * @param range The range to transform.
+ * @param transform The transform to apply.
+ * @return A list of transformed ranges.
+ */
+std::vector<Range<uint64_t>> transformRange(const Range<uint64_t>& range, const SeedTransform& transform) {
+	std::vector<Range<uint64_t>> result;
+	// #TODO
+	return result;
+}
+
+/**
  * Transforms the seed id according to the given transforms.
  * @param seedId The seed id to transform.
  * @param transforms The transforms to apply.
  * @return True if the seed id was transformed, false otherwise.
 */
-bool mapSeed(uint_fast64_t &seedId, const std::vector<SeedTransform>& transforms) {
+bool mapSeed(uint64_t &seedId, const std::vector<SeedTransform>& transforms) {
 	for (auto& transform : transforms) {
 		if (transformSeed(seedId, transform)) return true;
 	}
 	return false;
 }
 
-uint_fast64_t parseSeedMap(std::ifstream& input_file, std::vector<SeedTransform>& seed_map) {
+uint64_t parseSeedMap(std::ifstream& input_file, std::vector<SeedTransform>& seed_map) {
 	std::string str;
 	std::getline(input_file, str); // title line
 	std::getline(input_file, str);
 	while(!str.empty()) {
 		std::vector<std::string> parts = split(str, ' ');
-		uint_fast64_t destination = std::stoull(parts[0]);
-		uint_fast64_t source = std::stoull(parts[1]);
-		uint_fast64_t length = std::stoull(parts[2]);
+		uint64_t destination = std::stoull(parts[0]);
+		uint64_t source = std::stoull(parts[1]);
+		uint64_t length = std::stoull(parts[2]);
 		seed_map.push_back({source, destination, length});
 		std::getline(input_file, str);
 	}
@@ -88,11 +91,11 @@ int main() {
 		return 1;
 	}
 
-	uint_fast64_t answer1 = 0;
-	uint_fast64_t answer2 = 0;
+	uint64_t answer1 = 0;
+	uint64_t answer2 = 0;
 
-	std::vector<uint_fast64_t> seedIds;
-	std::vector<SeedRange> seedRanges;
+	std::vector<uint64_t> seedIds;
+	std::vector<Range<uint64_t>> seedRanges;
 
 	std::vector<SeedTransform> seed_to_soil;
 	std::vector<SeedTransform> soil_to_fertilizer;
@@ -115,7 +118,7 @@ int main() {
 
 		// also parse seed ranges now
 		for (int i = 1; i < seed_ids.size(); i += 2) {
-			SeedRange range({std::stoull(seed_ids[i]), std::stoull(seed_ids[i+1])});
+			Range<uint64_t> range = Range<uint64_t>::fromLength(std::stoull(seed_ids[i]), std::stoull(seed_ids[i+1]));
 			std::cout << "Seed Range: " << range << std::endl;
 			seedRanges.push_back(range);
 		}
@@ -136,42 +139,8 @@ int main() {
 	// std::getline(input_file, str); // blank line
 	parseSeedMap(input_file, humidity_to_location);
 
-	// std::cout << "Seed to soil: " << std::endl;
-	// for (auto& transform : seed_to_soil) {
-	// 	std::cout << transform << std::endl;
-	// }
 
-	// std::cout << "Soil to fertilizer: " << std::endl;
-	// for (auto& transform : soil_to_fertilizer) {
-	// 	std::cout << transform << std::endl;
-	// }
-
-	// std::cout << "Fertilizer to water: " << std::endl;
-	// for (auto& transform : fertilizer_to_water) {
-	// 	std::cout << transform << std::endl;
-	// }
-
-	// std::cout << "Water to light: " << std::endl;
-	// for (auto& transform : water_to_light) {
-	// 	std::cout << transform << std::endl;
-	// }
-
-	// std::cout << "Light to temperature: " << std::endl;
-	// for (auto& transform : light_to_temperature) {
-	// 	std::cout << transform << std::endl;
-	// }
-
-	// std::cout << "Temperature to humidity: " << std::endl;
-	// for (auto& transform : temperature_to_humidity) {
-	// 	std::cout << transform << std::endl;
-	// }
-
-	// std::cout << "Humidity to location: " << std::endl;
-	// for (auto& transform : humidity_to_location) {
-	// 	std::cout << transform << std::endl;
-	// }
-
-	uint_fast64_t lowest = UINT_FAST64_MAX;
+	uint64_t lowest = UINT_FAST64_MAX;
 	for (auto& seedId : seedIds) {
 		// std::cout << "Seed ID: " << seedId << " => ";
 		mapSeed(seedId, seed_to_soil);
