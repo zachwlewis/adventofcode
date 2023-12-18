@@ -23,6 +23,14 @@ struct Range {
 
     /** Is the range empty? */
     bool empty() const { return start > end; }
+
+    /** Is the given value in the range? */
+    bool contains(T value) const { return value >= start && value <= end; }
+
+    /** Does this range intersect another range? */
+    bool intersects(Range<T> const &other) const {
+        return contains(other.start) || contains(other.end) || other.contains(start) || other.contains(end);
+    }
 };
 
 template<typename T>

@@ -19,10 +19,18 @@ struct SeedTransform {
 	uint64_t source_start;
 	uint64_t destination_start;
 	uint64_t length;
+
+	Range<uint64_t> sourceRange() const {
+		return Range<uint64_t>::fromLength(source_start, length);
+	}
+
+	Range<uint64_t> destinationRange() const {
+		return Range<uint64_t>::fromLength(destination_start, length);
+	}
 };
 
 inline std::ostream & operator<<(std::ostream & Str, SeedTransform const & v) { 
-	Str << "[" << v.source_start << ".." << v.source_start + v.length-1 << "] => [" << v.destination_start << ".." << v.destination_start + v.length << "]";
+	Str << "[" << v.source_start << ".." << v.source_start + v.length-1 << "] => [" << v.destination_start << ".." << v.destination_start + v.length - 1 << "]";
 	return Str;
 }
 
@@ -48,7 +56,36 @@ bool transformSeed(uint64_t &seedId, const SeedTransform& transform) {
  */
 std::vector<Range<uint64_t>> transformRange(const Range<uint64_t>& range, const SeedTransform& transform) {
 	std::vector<Range<uint64_t>> result;
-	// #TODO
+	std::cout << "Transforming range " << range << " with transform " << transform << std::endl;
+	if (range.intersects(transform.sourceRange())) {
+		uint64_t intersect_start;
+		uint64_t intersect_end;
+
+		if (range.start < transform.source_start) {
+			intersect_start = transform.source_start;
+		} else {
+			intersect_start = range.start;
+		}
+
+		if (range.end > transform.source_start + transform.length) {
+			intersect_end = transform.source_start + transform.length;
+		} else {
+			intersect_end = range.end;
+		}
+
+		Range<uint64_t> intersect = Range<uint64_t>::fromLength(intersect_start, intersect_end - intersect_start + 1);
+
+		// Map intersect to destination
+		
+		uint64_t intersect_destination_start = transform.destination_start + (intersect.start - transform.source_start);
+		uint64_t intersect_destination_end = transform.destination_start + (intersect.end - transform.source_start);
+		Range<uint64_t> intersect_destination(intersect_destination_start, intersect_destination_end);
+
+		std::cout << "Intersects => " << intersect << " | " << intersect_destination << std::endl;
+
+	} else {
+		std::cout << "Does not intersect" << std::endl;
+	}
 	return result;
 }
 
@@ -79,6 +116,14 @@ uint64_t parseSeedMap(std::ifstream& input_file, std::vector<SeedTransform>& see
 	}
 
 	return seed_map.size() - 1;
+}
+
+std::vector<Range<uint64_t>> mapRange(const Range<uint64_t>& range, const std::vector<SeedTransform>& transforms) {
+	std::vector<Range<uint64_t>> result;
+	for (auto& transform : transforms) {
+		std::vector<Range<uint64_t>> transformed = transformRange(range, transform);
+	}
+	return result;
 }
 
 int main() {
@@ -163,7 +208,11 @@ int main() {
 		}
 
 	}
+	
 	answer1 = lowest;
+
+	mapRange(seedRanges[0], seed_to_soil);
+
 	std::cout << "Answer 1: " << answer1 << std::endl;
 	std::cout << "Answer 2: " << answer2 << std::endl;
 
