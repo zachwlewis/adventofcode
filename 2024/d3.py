@@ -2,7 +2,7 @@
 # Day 3
 # https://adventofcode.com/2024/day/3
 
-import math, common, re
+import common, re
 
 def getInput() -> list[str]:
     filename = common.getFilePath("input3.txt")
@@ -25,7 +25,7 @@ def correctedLineSum(strings:list[str]) -> int:
     should_add = True
     total = 0
     for s in strings:
-        matches = re.findall(r"(do\(\)|mul\(\d+,\d+\)|don't\(\))", s)
+        matches = re.findall(commands, s)
         
         for match in matches:
             if match == "do()":
