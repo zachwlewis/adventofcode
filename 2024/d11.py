@@ -2,23 +2,7 @@
 # Day 11
 # https://adventofcode.com/2024/day/11
 
-import common
-from grid import Grid
-from point import IntPoint2
-
-def getInput(s:str) -> Grid[int]:
-    filename = common.getFilePath(s)
-    data = []
-    with open(filename, "r") as file:
-        data = file.read().splitlines()
-        
-    grid = Grid(data)
-
-    for j in range(grid.height):
-        for i in range(grid.width):
-            grid[i,j] = int(grid[i,j])
-
-    return grid
+from typing import Dict
 
 def blink(stones: list[int]) -> list[int]:
     """
@@ -50,6 +34,29 @@ def blink(stones: list[int]) -> list[int]:
     
     return s
 
+def blinkMap(stones: Dict[int, int]) -> Dict[int, int]:
+    """
+    Same as blink, but with a map counting the number of stones with a given number.
+
+    Hopefully, this fixes the issue of the array growing too quickly.
+    """
+
+    s: Dict[int,int] = {}
+    for stone, count in stones.items():
+        if stone == 0:
+            s[1] = s.get(1, 0) + count
+        elif len(str(stone)) % 2 == 0:
+            half = len(str(stone)) // 2
+            a = int(str(stone)[:half])
+            b = int(str(stone)[half:])
+            s[a] = s.get(a, 0) + count
+            s[b] = s.get(b, 0) + count
+        else:
+            a = stone * 2024
+            s[a] = s.get(a, 0) + count
+
+    return s
+
 def solution1(stones: list[int]) -> int:
     """
     Return the number of stones with the number 1 after 2024 blinks.
@@ -57,7 +64,6 @@ def solution1(stones: list[int]) -> int:
     original = stones.copy()
     for _ in range(25):
         stones = blink(stones)
-        #print(f"Blink {_ + 1}: {stones}")
 
     return len(stones)
 
@@ -66,7 +72,22 @@ def solution2(stones: list[int]) -> int:
     Need another approach, since the array grows too quickly.
     """
 
-    return 0
+    # Convert stones into a map
+    stone_map: Dict[int,int] = {}
+    for stone in stones:
+        if stone in stone_map:
+            stone_map[stone] += 1
+        else:
+            stone_map[stone] = 1
+
+    for _ in range(75):
+        stone_map = blinkMap(stone_map)
+
+    total = 0
+    for count in stone_map.values():
+        total += count
+
+    return total
 
 test = [125,17]
 input = [9759, 0, 256219, 60, 1175776, 113, 6, 92833]
