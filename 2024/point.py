@@ -6,12 +6,12 @@ class IntPoint2:
 
     @property
     def t(self) -> tuple[int, int]:
-        return (self.x, self.y)
+        return self.x, self.y
     
     @t.setter
     def t(self, value: tuple[int, int]) -> None:
         self.x, self.y = value
-
+    
     def __add__(self, other: 'IntPoint2') -> 'IntPoint2':
         return IntPoint2(self.x + other.x, self.y + other.y)
     

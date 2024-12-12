@@ -65,6 +65,11 @@ class Grid(Generic[T]):
         copy._grid = self._grid.copy()
         return copy
     
+    def inBounds(self, indices:tuple[int,int]) -> bool:
+        """Returns True if the indices are within the bounds of the grid."""
+        x, y = indices
+        return x >= 0 and x < self._width and y >= 0 and y < self._height
+    
     def __len__(self) -> int:
         """Returns the number of elements in the grid."""
         return len(self._grid)
