@@ -12,6 +12,7 @@ DOWN = IntPoint2(0, 1)
 LEFT = IntPoint2(-1, 0)
 RIGHT = IntPoint2(1, 0)
 DIRECTONS = [UP, DOWN, LEFT, RIGHT]
+ROTATION = [LEFT, LEFT + UP, UP, RIGHT + UP, RIGHT, RIGHT + DOWN, DOWN, LEFT + DOWN, LEFT]
 
 CROPS = [chr(c+65) for c in range(26)]
 
@@ -21,6 +22,7 @@ class Region:
     area: int
     perimeter: int
     locations: set[IntPoint2]
+    corners: set[IntPoint2]
 
 
 def getInput(s:str) -> Grid[str]:
@@ -35,6 +37,7 @@ def floodRegion(grid:Grid[str], start:IntPoint2) -> Region:
     area: int = 0
     perimeter: int = 0
     locations: set[IntPoint2] = set()
+    corners: int = 0
     stack: set[IntPoint2] = set()
     stack.add(start)
 
@@ -59,10 +62,31 @@ def floodRegion(grid:Grid[str], start:IntPoint2) -> Region:
                 perimeter += 1
             else:
                 stack.add(neighbor)
-        
-    return Region(crop, area, perimeter, locations)
 
-def solution1(grid:Grid[str]) -> int:
+    # Find the corners.
+    for l in locations:
+        kernel:list[bool] = []
+        for d in ROTATION:
+            n = l + d
+            if not grid.inBounds(n.t):
+                kernel.append(False)
+            else:
+                kernel.append(grid[n.t] == replace)
+
+        # We've created our kernel.
+        # Now, check if it's a corner.
+
+        for i in [0,2,4,6]:
+            k = kernel[i:i+3]
+            if k[0] == False and k[2] == False:
+                corners += 1
+            elif k[0] == True and k[2] == True and k[1] == False:
+                corners += 1
+
+    return Region(crop, area, perimeter, locations, corners)
+
+def solution1(g:Grid[str]) -> int:
+    grid = g.copy()
     regions: list[Region] = []
     for y in range(grid.height):
         for x in range(grid.width):
@@ -73,8 +97,20 @@ def solution1(grid:Grid[str]) -> int:
         price += region.area * region.perimeter
     return price
 
+def solution2(g:Grid[str]) -> int:
+    grid = g.copy()
+    regions: list[Region] = []
+    for y in range(grid.height):
+        for x in range(grid.width):
+            if grid[x, y] in CROPS:
+                    regions.append(floodRegion(grid, IntPoint2(x, y)))
+    price = 0
+    for region in regions:
+        price += region.area * region.corners
+    return price
+
 # For Part 2, we need to find the number of edges, not just
-# the perimeter.
+# the perimeter. Finding corners would also work.
 
 
 test= getInput("input12_test.txt")
@@ -82,8 +118,8 @@ input = getInput("input12.txt")
 
 print("Test cases:")
 print(f"S1: {solution1(test)}")
-#print(f"S2: {solution2(test)}")
+print(f"S2: {solution2(test)}")
 
 print("Solutions:")
 print(f"S1: {solution1(input)}")
-#print(f"S2: {solution2(input)}")
+print(f"S2: {solution2(input)}")
