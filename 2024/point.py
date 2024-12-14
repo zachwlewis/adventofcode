@@ -18,6 +18,15 @@ class IntPoint2:
     def __sub__(self, other: 'IntPoint2') -> 'IntPoint2':
         return IntPoint2(self.x - other.x, self.y - other.y)
     
+    def __mul__(self, other: 'IntPoint2') -> 'IntPoint2':
+        return IntPoint2(self.x * other.x, self.y * other.y)
+    
+    def __floordiv__(self, other: 'IntPoint2') -> 'IntPoint2':
+        return IntPoint2(self.x // other.x, self.y // other.y)
+    
+    def __truediv__(self, other: 'IntPoint2') -> 'IntPoint2':
+        return IntPoint2(self.x / other.x, self.y / other.y)
+    
     def __repr__(self) -> str:
         return f"({self.x}, {self.y})"
     
