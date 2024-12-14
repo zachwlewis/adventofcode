@@ -1,3 +1,4 @@
+from typing import Any
 class IntPoint2:
     """A point in 2D space."""
     def __init__(self, x: int, y: int) -> None:
@@ -18,11 +19,18 @@ class IntPoint2:
     def __sub__(self, other: 'IntPoint2') -> 'IntPoint2':
         return IntPoint2(self.x - other.x, self.y - other.y)
     
-    def __mul__(self, other: 'IntPoint2') -> 'IntPoint2':
-        return IntPoint2(self.x * other.x, self.y * other.y)
+    def __mul__(self, other: Any) -> 'IntPoint2':
+        # If other is an IntPoint2, return an IntPoint2
+        if isinstance(other, IntPoint2):
+            return IntPoint2(self.x * other.x, self.y * other.y)
+        else:
+            return IntPoint2(self.x * other, self.y * other)
     
-    def __floordiv__(self, other: 'IntPoint2') -> 'IntPoint2':
-        return IntPoint2(self.x // other.x, self.y // other.y)
+    def __floordiv__(self, other: Any) -> 'IntPoint2':
+        if isinstance(other, IntPoint2):
+            return IntPoint2(self.x // other.x, self.y // other.y)
+        else:
+            return IntPoint2(self.x // other, self.y // other)
     
     def __truediv__(self, other: 'IntPoint2') -> 'IntPoint2':
         return IntPoint2(self.x / other.x, self.y / other.y)
