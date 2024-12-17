@@ -38,7 +38,7 @@ class Grid(Generic[T]):
     def height(self) -> int:
         """Returns the height of the grid."""
         return self._height
-    
+
     def find(self, value:T) -> tuple[int,int]:
         """Returns the index of the first occurrence of the value in the grid."""
         try:
