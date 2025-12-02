@@ -14,7 +14,6 @@ def getInput() -> list[tuple[str,int]]:
             input.append((m.group(1), int(m.group(2))))
     return input
 
-print("hello world")
 input = getInput()
 dial = 50
 zeros = 0
